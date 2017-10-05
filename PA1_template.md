@@ -1,8 +1,5 @@
----
-output: 
-  html_document: 
-    keep_md: yes
----
+
+
 
 ## Reproducible Research: Course Project 1
 
@@ -23,14 +20,16 @@ Data Variables:
 ### Reading and Processing the Data
 
 First read in the libraries that we'll need for the analyses.
-```{r, echo = TRUE, message=FALSE, warning=FALSE}
+
+```r
 library(ggplot2)
 library(dplyr)
 ```
 
 We want to read the data in from the URL and process out the NAs since we're not interested in the cases that have missing values for the steps data.
 
-```{r, echo = TRUE}
+
+```r
 # Download the data and read it in
 URL <- "http://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip"
 download.file(URL, "activityData.zip", mode = "wb")
@@ -43,13 +42,25 @@ dataComplete <- data[index, ]
 summary(dataComplete)
 ```
 
+```
+##      steps                date          interval     
+##  Min.   :  0.00   2012-10-02:  288   Min.   :   0.0  
+##  1st Qu.:  0.00   2012-10-03:  288   1st Qu.: 588.8  
+##  Median :  0.00   2012-10-04:  288   Median :1177.5  
+##  Mean   : 37.38   2012-10-05:  288   Mean   :1177.5  
+##  3rd Qu.: 12.00   2012-10-06:  288   3rd Qu.:1766.2  
+##  Max.   :806.00   2012-10-07:  288   Max.   :2355.0  
+##                   (Other)   :13536
+```
+
 ***
 
 ### What is mean total number of steps taken per day?
 
 Now we want to know the distribution of total daily steps taken over the whole data period.
 
-```{r, echo = TRUE, message=FALSE}
+
+```r
 # Calculate the total number of steps taken per day
 dataDates <- aggregate(dataComplete$steps, by = list(dataComplete$date), FUN = sum)
 names(dataDates)[1] <- "date"
@@ -62,18 +73,33 @@ ggplot(dataDates, aes(x = steps)) +
   scale_y_continuous(limits=c(0, 10), breaks = seq(0,10,2))
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-3-1.png)<!-- -->
+
 As we see from the histogram, the most frequent daily step count falls between 10,000 and about 14,000 steps, which happened on 7 to 9 days during the tracking period. What's the mean and median number of steps for this data set?
 
-```{r, echo = TRUE}
+
+```r
 mean(dataDates$steps)
+```
+
+```
+## [1] 10766.19
+```
+
+```r
 median(dataDates$steps)
+```
+
+```
+## [1] 10765
 ```
 
 ***
 
 ### What is the average daily activity pattern?
 
-```{r, echo = TRUE}
+
+```r
 # Average the intervals across all days
 dataIntervals <- aggregate(steps ~ interval, data = dataComplete, FUN = mean)
 
@@ -83,12 +109,20 @@ ggplot(dataIntervals, aes(x = interval, y = steps)) +
   labs(title = "Average Number of Steps Taken", x = "Time Intervals (5 min long)", y = "Number of Steps")
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-5-1.png)<!-- -->
+
 Let's see which 5-minute interval, across all days, contains the maximum number of steps.
 
-```{r, echo = TRUE}
+
+```r
 # Calculate maximum number of steps and what interval they're in
 maxSteps <- max(dataIntervals$steps)
 dataIntervals[which(dataIntervals$steps == maxSteps), ]
+```
+
+```
+##     interval    steps
+## 104      835 206.1698
 ```
 
 ***
@@ -97,13 +131,19 @@ dataIntervals[which(dataIntervals$steps == maxSteps), ]
 
 Going back to our pre-processed data, there were a number of NAs in the dataset. How many exactly?
 
-```{r, echo = TRUE}
+
+```r
 sum(is.na(data$steps))
+```
+
+```
+## [1] 2304
 ```
 
 That's a lot of missing values. We need to devise a strategy to fill in these NAs with values. Let's use the average of the 5-minute time interval for each NA value. We'll need the `dplyr` library for this.
 
-```{r, echo = TRUE}
+
+```r
 # Replace NAs with the mean of the steps along the interval
 dataFilled <- data %>% 
   group_by(interval) %>%
@@ -111,9 +151,14 @@ dataFilled <- data %>%
   as.data.frame()
 ```
 
+```
+## Warning: package 'bindrcpp' was built under R version 3.3.3
+```
+
 We're going to look at the distribution of total daily steps taken over the whole data period again now that we have replaced the missing values.
 
-```{r, echo = TRUE}
+
+```r
 # Calculate the total number of steps taken per day
 dataDatesNew <- aggregate(dataFilled$steps, by = list(dataFilled$date), FUN = sum)
 names(dataDatesNew)[1] <- "date"
@@ -126,11 +171,25 @@ ggplot(dataDatesNew, aes(x = steps)) +
   scale_y_continuous(limits = c(0, 15), breaks = seq(0,15,2))
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-9-1.png)<!-- -->
+
 What's the mean and median number of steps for this data set now that we replaced the missing values?
 
-```{r, echo = TRUE}
+
+```r
 mean(dataDatesNew$steps)
+```
+
+```
+## [1] 10766.19
+```
+
+```r
 median(dataDatesNew$steps)
+```
+
+```
+## [1] 10766.19
 ```
 
 The values differ only very slightly, with the mean being the same and the median only a little bit different.
@@ -141,7 +200,8 @@ The values differ only very slightly, with the mean being the same and the media
 
 First we must create a few extra columns describing the days of the week for this data set.
 
-```{r, echo = TRUE, results = FALSE}
+
+```r
 # Figure out the day of the week
 dataFilled$DayofWeek <- weekdays(as.Date(dataFilled$date))
 
@@ -152,7 +212,8 @@ dataFilled$DayType <- ifelse(dataFilled$DayofWeek == "Saturday" | dataFilled$Day
 
 Now we want to compare our daily pattern on a weekday to the one on a weekend.
 
-```{r, echo = TRUE}
+
+```r
 # Average the intervals across all days
 dataIntervalsNew <- aggregate(steps ~ interval + DayType, data = dataFilled, FUN = mean)
 
@@ -161,5 +222,7 @@ ggplot(dataIntervalsNew, aes(x = interval, y = steps)) +
   geom_line(col = "royalblue2") + facet_grid(DayType ~.) +
   labs(title = "Average Number of Steps Taken", x = "Time Intervals (5 min long)", y = "Number of  Steps")
 ```
+
+![](PA1_template_files/figure-html/unnamed-chunk-12-1.png)<!-- -->
 
 We do see some differences, such as an earlier and bigger activity spike in the morning (perhaps a work commute) on the weekdays.
